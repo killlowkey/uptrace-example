@@ -1,6 +1,9 @@
 package store
 
-import "gorm.io/gorm"
+import (
+	"encoding/json"
+	"gorm.io/gorm"
+)
 
 type User struct {
 	gorm.Model
@@ -10,4 +13,9 @@ type User struct {
 
 func (u *User) TableName() string {
 	return "users"
+}
+
+func (u *User) ToJson() string {
+	data, _ := json.Marshal(u)
+	return string(data)
 }

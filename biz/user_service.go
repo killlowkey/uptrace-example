@@ -2,13 +2,16 @@ package biz
 
 import (
 	"context"
-	"encoding/json"
 	"errors"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/codes"
 	"go.opentelemetry.io/otel/trace"
 	"uptrace-example/store"
+)
+
+var (
+	ErrUserAlreadyExists = errors.New("user already exists")
 )
 
 type UserService interface {
@@ -29,32 +32,39 @@ func NewUserService(store store.UserStore) UserService {
 }
 
 func (u *UserServiceImpl) Create(ctx context.Context, user *store.User) error {
-	if exist, err := u.store.Exist(ctx, map[string]string{"name": user.Name}); err != nil {
+	c, span := u.tracer.Start(ctx, "Create")
+	defer span.End()
+
+	if exist, err := u.store.Exist(c, map[string]string{"name": user.Name}); err != nil {
+		span.SetAttributes(attribute.String("method.args.user", user.ToJson()))
+		span.RecordError(err, trace.WithStackTrace(true))
 		return err
 	} else if exist {
-		return errors.New("user already exists")
+		span.SetAttributes(attribute.String("method.args.user", user.ToJson()))
+		span.RecordError(ErrUserAlreadyExists, trace.WithStackTrace(true))
+		return ErrUserAlreadyExists
 	}
 
-	return u.store.Create(ctx, user)
+	return u.store.Create(c, user)
 }
 
 // FindByID 通过 id 查找用户
 // 手动创建 span，来追踪自身的业务逻辑
+// 成功的处理，不需要记录方法参数和方法返回值
 func (u *UserServiceImpl) FindByID(ctx context.Context, id int64) (*store.User, error) {
-	c, span := u.tracer.Start(ctx, "UserService#FindByID")
+	c, span := u.tracer.Start(ctx, "FindByID")
 	defer span.End()
-
-	span.SetAttributes(attribute.Int64("method.args.id", id))
 
 	user, err := u.store.FindById(c, id)
 	if err != nil {
-		span.SetStatus(codes.Error, err.Error())
-		span.SetAttributes(attribute.String("method.resp.error", err.Error()))
+		// https://opentelemetry.io/docs/specs/semconv/exceptions/exceptions-spans/
+		// 记录错误信息、堆栈信息
+		span.SetAttributes(attribute.Int64("method.args.id", id))
+		span.RecordError(err, trace.WithStackTrace(true))
 		return nil, err
 	} else {
-		span.SetStatus(codes.Ok, "ok")
-		data, _ := json.Marshal(user)
-		span.SetAttributes(attribute.String("method.resp.user", string(data)))
+		span.SetStatus(codes.Ok, "success")
+		//span.SetAttributes(attribute.String("method.response", user.ToJson()))
 		return user, err
 	}
 }

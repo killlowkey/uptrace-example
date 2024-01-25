@@ -5,6 +5,8 @@ import (
 	"github.com/uptrace/opentelemetry-go-extra/otelplay"
 	"strconv"
 	"uptrace-example/biz"
+	"uptrace-example/global"
+	"uptrace-example/store"
 )
 
 type UserController struct {
@@ -26,6 +28,9 @@ func (u *UserController) GetUserById(c *gin.Context) {
 	if err != nil {
 		// 附加错误信息，让 uptrace 收集
 		_ = c.Error(err)
+		global.Sugar.Ctx(c.Request.Context()).Errorw(err.Error(),
+			"id", idParam,
+		)
 		Fatal(c, 400, err.Error())
 		return
 	}
@@ -35,6 +40,38 @@ func (u *UserController) GetUserById(c *gin.Context) {
 	if err != nil {
 		// 附加错误信息，让 uptrace 收集
 		_ = c.Error(err)
+		global.Sugar.Ctx(c.Request.Context()).Errorw(err.Error(),
+			"id", id,
+		)
+		Fatal(c, 500, err.Error())
+		return
+	}
+
+	// 可以通过 traceparent 和 tracestate 两个 header 来传递链路信息
+	Ok(c, user)
+}
+
+func (u *UserController) Create(c *gin.Context) {
+	// 需要通过该 url 看，才能看到完整的链路信息
+	// https://app.uptrace.dev/traces/3043/17acab0d42eb0050f6409c9bfee157c1?time_gte=20240122T113200&time_dur=3600&span=244382601524
+	otelplay.PrintTraceID(c.Request.Context())
+
+	var user store.User
+	if err := c.ShouldBindJSON(&user); err != nil {
+		// 附加错误信息，让 uptrace 收集
+		_ = c.Error(err)
+		global.Sugar.Ctx(c.Request.Context()).Errorw(err.Error())
+		Fatal(c, 400, err.Error())
+		return
+	}
+
+	// 需要从请求中拿到 context，传播给下一层，才能形成完整的链路信息
+	if err := u.service.Create(c.Request.Context(), &user); err != nil {
+		// 附加错误信息，让 uptrace 收集
+		_ = c.Error(err)
+		global.Sugar.Ctx(c.Request.Context()).Errorw(err.Error(),
+			"user", user,
+		)
 		Fatal(c, 500, err.Error())
 		return
 	}

@@ -35,7 +35,8 @@ func init() {
 // go get github.com/uptrace/opentelemetry-go-extra/otelgorm
 // https://uptrace.dev/get/instrument/opentelemetry-gorm.html#what-is-gorm
 func main() {
-	global.DB = initializer.InitGorm()
+	initializer.InitGorm()
+	initializer.InitLogger()
 
 	router := gin.Default()
 	userStore := store.NewUserStore(global.DB)
@@ -49,6 +50,7 @@ func main() {
 		return true
 	})))
 	router.GET("/api/v1/user/:id", ctl.GetUserById)
+	router.POST("/api/v1/user", ctl.Create)
 
 	err := router.Run(":8080")
 	if err != nil {

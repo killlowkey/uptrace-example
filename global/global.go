@@ -1,7 +1,12 @@
 package global
 
-import "gorm.io/gorm"
+import (
+	"github.com/uptrace/opentelemetry-go-extra/otelzap"
+	"gorm.io/gorm"
+)
 
 var (
-	DB *gorm.DB
+	DB    *gorm.DB
+	Log   *otelzap.Logger
+	Sugar *otelzap.SugaredLogger
 )

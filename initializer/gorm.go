@@ -4,10 +4,11 @@ import (
 	"github.com/glebarez/sqlite"
 	"github.com/uptrace/opentelemetry-go-extra/otelgorm"
 	"gorm.io/gorm"
+	"uptrace-example/global"
 	"uptrace-example/store"
 )
 
-func InitGorm() *gorm.DB {
+func InitGorm() {
 	db, err := gorm.Open(sqlite.Open("file::memory:?cache=shared"), &gorm.Config{})
 	if err != nil {
 		panic(err)
@@ -28,5 +29,5 @@ func InitGorm() *gorm.DB {
 		Age:  18,
 	})
 
-	return db
+	global.DB = db
 }
