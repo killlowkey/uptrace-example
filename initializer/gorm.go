@@ -5,7 +5,7 @@ import (
 	"github.com/uptrace/opentelemetry-go-extra/otelgorm"
 	"gorm.io/gorm"
 	"uptrace-example/global"
-	"uptrace-example/store"
+	"uptrace-example/store/model"
 )
 
 func InitGorm() {
@@ -18,13 +18,13 @@ func InitGorm() {
 		panic(err)
 	}
 
-	err = db.AutoMigrate(&store.User{})
+	err = db.AutoMigrate(&model.User{})
 	if err != nil {
 		panic(err)
 	}
 
 	// 初始化数据
-	db.Create(&store.User{
+	db.Create(&model.User{
 		Name: "张三",
 		Age:  18,
 	})

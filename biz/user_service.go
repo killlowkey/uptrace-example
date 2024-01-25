@@ -8,6 +8,7 @@ import (
 	"go.opentelemetry.io/otel/codes"
 	"go.opentelemetry.io/otel/trace"
 	"uptrace-example/store"
+	"uptrace-example/store/model"
 )
 
 var (
@@ -15,8 +16,8 @@ var (
 )
 
 type UserService interface {
-	Create(ctx context.Context, user *store.User) error
-	FindByID(ctx context.Context, id int64) (*store.User, error)
+	Create(ctx context.Context, user *model.User) error
+	FindByID(ctx context.Context, id int64) (*model.User, error)
 }
 
 type UserServiceImpl struct {
@@ -31,7 +32,7 @@ func NewUserService(store store.UserStore) UserService {
 	}
 }
 
-func (u *UserServiceImpl) Create(ctx context.Context, user *store.User) error {
+func (u *UserServiceImpl) Create(ctx context.Context, user *model.User) error {
 	c, span := u.tracer.Start(ctx, "Create")
 	defer span.End()
 
@@ -51,7 +52,7 @@ func (u *UserServiceImpl) Create(ctx context.Context, user *store.User) error {
 // FindByID 通过 id 查找用户
 // 手动创建 span，来追踪自身的业务逻辑
 // 成功的处理，不需要记录方法参数和方法返回值
-func (u *UserServiceImpl) FindByID(ctx context.Context, id int64) (*store.User, error) {
+func (u *UserServiceImpl) FindByID(ctx context.Context, id int64) (*model.User, error) {
 	c, span := u.tracer.Start(ctx, "FindByID")
 	defer span.End()
 

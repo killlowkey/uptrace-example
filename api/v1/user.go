@@ -6,7 +6,7 @@ import (
 	"strconv"
 	"uptrace-example/biz"
 	"uptrace-example/global"
-	"uptrace-example/store"
+	"uptrace-example/store/model"
 )
 
 type UserController struct {
@@ -56,7 +56,7 @@ func (u *UserController) Create(c *gin.Context) {
 	// https://app.uptrace.dev/traces/3043/17acab0d42eb0050f6409c9bfee157c1?time_gte=20240122T113200&time_dur=3600&span=244382601524
 	otelplay.PrintTraceID(c.Request.Context())
 
-	var user store.User
+	var user model.User
 	if err := c.ShouldBindJSON(&user); err != nil {
 		// 附加错误信息，让 uptrace 收集
 		_ = c.Error(err)
