@@ -37,6 +37,7 @@ func (u *UserServiceImpl) Create(ctx context.Context, user *model.User) error {
 	defer span.End()
 
 	if exist, err := u.store.Exist(c, map[string]string{"name": user.Name}); err != nil {
+		//attribute.Key("method.args").String()
 		span.SetAttributes(attribute.String("method.args.user", user.ToJson()))
 		span.RecordError(err, trace.WithStackTrace(true))
 		return err

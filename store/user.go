@@ -15,7 +15,7 @@ type UserStore interface {
 	Delete(ctx context.Context, id int64) error
 	BatchDelete(ctx context.Context, ids []int64) error
 	BatchCreate(ctx context.Context, users []*model.User) error
-	Exist(ctx context.Context, query any) (bool, error)
+	Exist(ctx context.Context, query interface{}, args ...interface{}) (bool, error)
 }
 
 type UserStoreImpl struct {
@@ -58,9 +58,9 @@ func (u *UserStoreImpl) BatchCreate(ctx context.Context, users []*model.User) er
 	return u.db.WithContext(ctx).Create(users).Error
 }
 
-func (u *UserStoreImpl) Exist(ctx context.Context, query any) (bool, error) {
+func (u *UserStoreImpl) Exist(ctx context.Context, query interface{}, args ...interface{}) (bool, error) {
 	var user model.User
-	err := u.db.WithContext(ctx).Where(query).First(&user).Error
+	err := u.db.WithContext(ctx).Where(query, args...).First(&user).Error
 	if errors.Is(err, gorm.ErrRecordNotFound) {
 		return false, nil
 	}
